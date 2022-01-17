@@ -2,8 +2,6 @@
 
   准备找工作复习数据结构时候写的一些简单容器，无线程安全。因为从 C# 转回 C++，用的还不太熟练,所以 emmmmmmm…………。主要还是因为习惯了C# system.collections.generic，又没时间重新学STL库，所以就自己写了个习惯上和 C# 差不多的库。
 
----
-
 * ## 包含容器
 
   容器|描述
@@ -17,7 +15,11 @@
   Tree|n叉树
   BinarySearchTree|二叉搜索树
 
----
+* ## 使用方法：
+
+  ```cpp
+  #include "collections.h"
+  ```
 
 * ## 枚举器 Enumerator
 
@@ -28,7 +30,7 @@
 
   需要设置当前枚举值时，可以调用 `this->SetCurrent()` 方法
 
----
+
 
 * ## 容器 Collection
 
@@ -37,7 +39,7 @@
   * `Clear`：清空容器
   * `Count`：当前容器内元素数量
 
----
+
 
 * ## 枚举遍历
   
