@@ -137,8 +137,7 @@ inline unsigned long HashTable<K,V>::Count()
 template<class K,class V>
 inline unsigned long HashTable<K,V>::GetHashCode(const K& key)
 {
-    unsigned long hashCode;
-    hashCode = std::hash<K>()(key);
+    unsigned long hashCode = std::hash<K>()(key);
     hashCode %= m_capacity;
     return hashCode;
 }

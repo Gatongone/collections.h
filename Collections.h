@@ -87,16 +87,17 @@ template <class T> class TreeNode;
 template <class T> class Tree;
 template <class K,class V> class KeyValuePair;
 template <class K,class V> class HashTable;
+template <class N,class E> class AdjacencyMatrix;
 
 //数组列表
 template <class T> class List : public Collection<T>
 {
     private:
-        T *m_list;                       //元素列表
+        T *m_list;                        //元素列表
         unsigned long m_index;            //枚举编号
         unsigned long m_count;            //当前容量
         unsigned long m_capacity;         //最大容量
-        inline void AutoExpand();        //自动扩容
+        inline void AutoExpand();         //自动扩容
     protected:
         bool MoveNext();
         void Reset();    
@@ -385,6 +386,139 @@ template <class T> class BinarySearchTree : public Tree<T>
         bool Remove(const T &item);
         bool Contains(const T &item);
 };
+//图
+template <class NodeType,class EdgeType> class Graph : public Collection<NodeType>
+{
+    protected:    
+        bool m_isOriented;         //是否是有向图
+        unsigned long m_nodeCount; //结点数
+        unsigned long m_edgeCount; //边数
+        virtual bool MoveNext() = 0;
+        virtual void Reset() = 0;
+    public:
+        unsigned long NodeCount() { return m_nodeCount; }
+        unsigned long EdgeCount() { return m_edgeCount; }
+        unsigned long Count() { return m_nodeCount; }
+        virtual void Clear() = 0;                                                                         //清空所有点和边
+        virtual void AddNode(const NodeType& node) = 0;                                                   //结点添加一个结点
+        virtual bool RemoveNode(const NodeType& node) = 0;                                                //删除一个结点                                  
+        virtual bool RemoveEdge(const NodeType& begin, const NodeType& end) = 0;                          //删除一条边
+        virtual EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end) = 0;                   //获得边权
+};
+//邻接表（十字链表 + 多重邻接表）
+template <class NodeType,class EdgeType> class AdjacencyList : public Graph<NodeType,EdgeType>
+{
+    private:
+        struct OrientedNode;
+        struct OrientedEdge;
+        struct UnorientedNode;
+        struct UnorientedEdge;
+
+        struct OrientedNode
+        {
+            NodeType data;
+            OrientedEdge* in;
+            OrientedEdge* out;
+            unsigned int inDegree;
+            unsigned int outDegree;
+            OrientedNode(const NodeType& data)
+            {
+                this->data = data;
+                in = NULL;
+                out = NULL;
+                inDegree = outDegree = 0;
+            }
+        };
+        struct OrientedEdge
+        {
+            EdgeType weight;
+            unsigned long beginVex;
+            unsigned long endVex;
+            OrientedEdge* in;
+            OrientedEdge* out;
+            OrientedEdge(const EdgeType& weight,const unsigned long& begin,const unsigned long& end)
+            {
+                this->weight = weight;
+                this->beginVex = begin;
+                this->endVex = end;
+                in = NULL;
+                out = NULL;
+            }
+        };
+        struct UnorientedNode
+        {
+            NodeType data;
+            unsigned int degree;
+            UnorientedEdge* firstEdge;
+            UnorientedNode(const NodeType& data)
+            {
+                this->data = data;
+                degree = 0;
+                firstEdge = NULL;
+            }
+        };
+        struct UnorientedEdge
+        {
+            EdgeType weight;
+            unsigned long beginVex;
+            unsigned long endVex;
+            UnorientedEdge* beginLink;
+            UnorientedEdge* endLink;
+            UnorientedEdge(const EdgeType& weight,unsigned long beginVex,unsigned long endVex)
+            {
+                this->weight = weight;
+                this->beginVex = beginVex;
+                this->endVex = endVex;
+                beginLink = endLink = NULL;
+            }
+        };
+
+        unsigned long m_currentIndex;
+        List<OrientedNode*> m_orientedNodes;
+        List<UnorientedNode*> m_unorientedNodes;
+        HashTable<NodeType, unsigned long> m_indexMapping;
+    protected:
+        bool MoveNext();
+        void Reset();
+    public:
+    AdjacencyList(bool isOriented);
+    void Clear();                                                                              //清空所有点和边
+    void AddNode(const NodeType& node);                                                        //结点添加一个结点
+    void AddEdge(const NodeType& begin, const NodeType& end,const EdgeType& weight,bool checkRepeatedEdge = false);           //在两结点中添加一条边
+    bool RemoveNode(const NodeType& node);                                                     //删除一个结点
+    bool RemoveEdge(const NodeType& begin, const NodeType& end);                               //删除一条边
+    EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end);                       //获得边权
+    void SetEdgeweight(const NodeType& begin, const NodeType& end,const EdgeType& weight);     //设置边权
+    unsigned int GetNodeDegree(const NodeType& node);                                          //获得结点的度 
+    unsigned int GetNodeInDegree(const NodeType& node);                                        //获得结点的度
+    unsigned int GetNodeOutDegree(const NodeType& node);                                       //获得结点的度
+};
+//邻接矩阵
+template <class NodeType,class EdgeType> class AdjacencyMatrix : public Graph<NodeType,EdgeType>
+{
+    private:
+        HashTable<NodeType, unsigned long> m_indexMapping;
+        List<NodeType> m_nodeList;
+        EdgeType*** m_matrix;
+        unsigned long m_nodeCapacity;
+        unsigned long m_currentIndex;
+    protected:
+        bool MoveNext();
+        void Reset();
+    public:
+        AdjacencyMatrix(bool isOriented);
+        ~AdjacencyMatrix();
+        void Clear();                                                                              //清空所有点和边
+        void AddNode(const NodeType& node);                                                        //结点添加一个结点
+        void AddEdge(const NodeType& begin, const NodeType& end,EdgeType&& weight);                //在两结点中添加一条边
+        void AddEdge(const NodeType& begin, const NodeType& end,EdgeType& weight);                 //在两结点中添加一条边
+        bool RemoveNode(const NodeType& node);                                                     //删除一个结点
+        bool RemoveEdge(const NodeType& begin, const NodeType& end);                               //删除一条边
+        EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end);                        //获得边权
+        void SetEdgeweight(const NodeType& begin, const NodeType& end,EdgeType&& weight);          //设置边权
+        void SetEdgeweight(const NodeType& begin, const NodeType& end,EdgeType& weight);           //设置边权
+};
+
 #pragma endregion
 
 #include "List.tpp"
@@ -395,6 +529,8 @@ template <class T> class BinarySearchTree : public Tree<T>
 #include "BinaryHeap.tpp"
 #include "Tree.tpp"
 #include "BinarySearchTree.tpp"
+#include "AdjacencyMatrix.tpp"
+#include "AdjacencyList.tpp"
 
 #undef ERRORMESSAGE
 #endif
