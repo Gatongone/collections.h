@@ -175,6 +175,7 @@ bool AdjacencyList<NodeType,EdgeType>::RemoveNode(const NodeType& node)
         m_unorientedNodes.RemoveAt(beginIndex);
     }
     m_indexMapping.Remove(node);
+    this->m_nodeCount--;
     return true;
 }
 
