@@ -4,7 +4,6 @@
 #define ERRORMESSAGE
 #define error(message) throw runtime_error(message)
 
-
 #ifndef COLLECTIONS
 #define COLLECTIONS
 
@@ -98,6 +97,10 @@ template <class T> class List : public Collection<T>
         unsigned long m_count;            //当前容量
         unsigned long m_capacity;         //最大容量
         inline void AutoExpand();         //自动扩容
+        void ShellSort(bool isReverse);   //希尔排序
+        void QuickSort(bool isReverse);   //快速排序
+        unsigned long PartitionSort(unsigned long left, unsigned long right); //局部排序
+
     protected:
         bool MoveNext();
         void Reset();    
@@ -115,6 +118,8 @@ template <class T> class List : public Collection<T>
         inline void Insert(unsigned long index,const T& item);//插入元素
         inline bool Remove(const T& item);                    //移除元素
         inline bool RemoveAt(unsigned long index);            //移除指定位置元素
+        T &GetAndRemove(unsigned long index);                 //返回并移除指定位置元素
+        void Sort(bool isReverse = false);                    //排序  
         void Clear();                                         //清空列表
         T* ToArray();                                         //列表转换为数组
         inline unsigned long Count();                         //返回元素数量
@@ -151,7 +156,7 @@ template <class T> class LinkedList : public Collection<T>
         bool RemoveAt(unsigned long index);                       //移除指定下标元素
         bool Remove(const T &item);                               //移除元素
         void Clear();                                             //清空链表
-        void Link(const LinkedList<T>&);                          //与指定链表链接，返回链接后的链表
+        void Link(const LinkedList<T>&);                          //与指定链表链接
         inline unsigned long Count();                             //返回元素数量
     private:
         Node* m_currentNode;
@@ -297,7 +302,7 @@ template <class T> class BinaryHeap : public Collection<T>
         T& ExtractTop();                    //返回并移除堆顶元素
         T& Peek();                          //返回堆顶结点
         bool RemoveTop();                   //移除堆顶结点
-        void Sort();                        //堆排序
+        T* Sort();                          //堆排序
         void Clear();                       //清空堆
         inline unsigned long Count();       //返回堆长度
 };
@@ -362,13 +367,13 @@ template <class T> class Tree : public Collection<T>
             Postorde,//后序遍历，遍历顺序为：孩子、根
             Sequence //层序遍历
         };
-        TraversalType CurrentTraversalType();
-        void SetTraversalType(TraversalType traversalType);
-        void Clear();
-        inline unsigned long Count();
-        TreeNode<T> *GetRoot();
-        void RebuildTree(TreeNode<T>* root);
-        void RebuildTree(const T& rootData);
+        TraversalType CurrentTraversalType();               //返回当前遍历类型
+        void SetTraversalType(TraversalType traversalType); //设置遍历类型
+        void Clear();                                       //清空树结点
+        inline unsigned long Count();                       //返回树结点数量
+        TreeNode<T> *GetRoot();                             //返回根节点
+        void RebuildTree(TreeNode<T>* root);                //重建树
+        void RebuildTree(const T& rootData);                //重建树
     protected:
         unsigned long m_count;
         TreeNode<T>* m_root;
@@ -403,16 +408,16 @@ template <class NodeType,class EdgeType> class Graph : public Collection<NodeTyp
         virtual void AddNode(const NodeType& node) = 0;                                                   //结点添加一个结点
         virtual bool RemoveNode(const NodeType& node) = 0;                                                //删除一个结点                                  
         virtual bool RemoveEdge(const NodeType& begin, const NodeType& end) = 0;                          //删除一条边
-        virtual EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end) = 0;                   //获得边权
+        virtual EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end) = 0;                  //获得边权
 };
 //邻接表（十字链表 + 多重邻接表）
 template <class NodeType,class EdgeType> class AdjacencyList : public Graph<NodeType,EdgeType>
 {
     private:
-        struct OrientedNode;
-        struct OrientedEdge;
-        struct UnorientedNode;
-        struct UnorientedEdge;
+        struct OrientedNode;  //有向图结点
+        struct OrientedEdge;  //有向图边
+        struct UnorientedNode;//无向图结点
+        struct UnorientedEdge;//无向图边
 
         struct OrientedNode
         {
@@ -482,16 +487,16 @@ template <class NodeType,class EdgeType> class AdjacencyList : public Graph<Node
         void Reset();
     public:
     AdjacencyList(bool isOriented);
-    void Clear();                                                                              //清空所有点和边
-    void AddNode(const NodeType& node);                                                        //结点添加一个结点
-    void AddEdge(const NodeType& begin, const NodeType& end,const EdgeType& weight,bool checkRepeatedEdge = false);           //在两结点中添加一条边
-    bool RemoveNode(const NodeType& node);                                                     //删除一个结点
-    bool RemoveEdge(const NodeType& begin, const NodeType& end);                               //删除一条边
-    EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end);                       //获得边权
-    void SetEdgeweight(const NodeType& begin, const NodeType& end,const EdgeType& weight);     //设置边权
-    unsigned int GetNodeDegree(const NodeType& node);                                          //获得结点的度 
-    unsigned int GetNodeInDegree(const NodeType& node);                                        //获得结点的度
-    unsigned int GetNodeOutDegree(const NodeType& node);                                       //获得结点的度
+    void Clear();                                                                                                   //清空所有点和边
+    void AddNode(const NodeType& node);                                                                             //结点添加一个结点
+    void AddEdge(const NodeType& begin, const NodeType& end,const EdgeType& weight,bool checkRepeatedEdge = false); //在两结点中添加一条边
+    bool RemoveNode(const NodeType& node);                                                                          //删除一个结点
+    bool RemoveEdge(const NodeType& begin, const NodeType& end);                                                    //删除一条边
+    EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end);                                            //获得边权
+    void SetEdgeweight(const NodeType& begin, const NodeType& end,const EdgeType& weight);                          //设置边权
+    unsigned int GetNodeDegree(const NodeType& node);                                                               //获得结点的度 
+    unsigned int GetNodeInDegree(const NodeType& node);                                                             //获得结点的入度
+    unsigned int GetNodeOutDegree(const NodeType& node);                                                            //获得结点的出度
 };
 //邻接矩阵
 template <class NodeType,class EdgeType> class AdjacencyMatrix : public Graph<NodeType,EdgeType>
@@ -514,7 +519,7 @@ template <class NodeType,class EdgeType> class AdjacencyMatrix : public Graph<No
         void AddEdge(const NodeType& begin, const NodeType& end,EdgeType& weight);                 //在两结点中添加一条边
         bool RemoveNode(const NodeType& node);                                                     //删除一个结点
         bool RemoveEdge(const NodeType& begin, const NodeType& end);                               //删除一条边
-        EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end);                        //获得边权
+        EdgeType& GetEdgeweight(const NodeType& begin, const NodeType& end);                       //获得边权
         void SetEdgeweight(const NodeType& begin, const NodeType& end,EdgeType&& weight);          //设置边权
         void SetEdgeweight(const NodeType& begin, const NodeType& end,EdgeType& weight);           //设置边权
 };

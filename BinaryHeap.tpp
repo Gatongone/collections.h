@@ -187,11 +187,11 @@ T& BinaryHeap<T>::ExtractTop()
 
 //堆排序
 template<class T>
-void BinaryHeap<T>::Sort()
+T* BinaryHeap<T>::Sort()
 {
     unsigned int count = Count();
     if(count <= 1)
-        return;
+        return NULL;
     unsigned int index = count - 1;
     unsigned int newIndex = 0;
     T result[count];
@@ -206,7 +206,7 @@ void BinaryHeap<T>::Sort()
     }
     m_heap->Clear();
     m_heap->Add(result,count);
-
+    return result;
 }
 
 //小顶堆比较
